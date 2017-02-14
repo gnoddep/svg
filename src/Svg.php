@@ -3,7 +3,7 @@ namespace Nerdman\Svg;
 
 class Svg
 {
-    /** @var Svg */
+    /** @var Svg|null */
     private $parent;
 
     /** @var string[] */
@@ -23,6 +23,14 @@ class Svg
         }
     }
 
+    /**
+     * @return Svg|null
+     */
+    public function getParent()
+    {
+        return $this->parent;
+    }
+
     public function __toString()
     {
         $svg = $this->svgElements;
@@ -30,7 +38,7 @@ class Svg
         $attributes = implode(' ', $this->svgAttributes);
 
         if ($this->parent) {
-            array_unshift($svg, sprintf('<g %s>', $attributes));
+            array_unshift($svg, sprintf('<g%s%s>', count($this->svgAttributes) ? ' ' : '', $attributes));
             $svg[] = '</g>';
         } else {
             array_unshift(
@@ -46,7 +54,7 @@ class Svg
 
     public function addAttribute($key, $value): self
     {
-        $this->svgAttributes[] = sprintf('%s="%s"', $key, $this->escape($value));
+        $this->svgAttributes[] = sprintf('%s="%s"', $key, $this->escape($value ?? ''));
         return $this;
     }
 
@@ -118,11 +126,12 @@ class Svg
         }
 
         $this->svgElements[] = sprintf(
-            '<line x1="%f" y1="%f" x2="%f" y2="%f" %s/>',
+            '<line x1="%f" y1="%f" x2="%f" y2="%f"%s%s/>',
             $startX,
             $startY,
             $endX,
             $endY,
+            count($attributes) ? ' ' : '',
             $this->implodeAttributes($attributes)
         );
 
@@ -151,14 +160,15 @@ class Svg
             $x,
             $y,
             $radius,
+            count($attributes) ? ' ' : '',
             $this->implodeAttributes($attributes),
         ];
 
         if ($title) {
-            $circleSvg = '<circle cx="%f" cy="%f" r="%f" %s><title>%s</title></circle>';
+            $circleSvg = '<circle cx="%f" cy="%f" r="%f"%s%s><title>%s</title></circle>';
             $arguments[] = $title;
         } else {
-            $circleSvg = '<circle cx="%f" cy="%f" r="%f" %s/>';
+            $circleSvg = '<circle cx="%f" cy="%f" r="%f"%s%s/>';
         }
 
         $this->svgElements[] = vsprintf($circleSvg, $arguments);
@@ -187,15 +197,16 @@ class Svg
         $arguments = [
             $x,
             $y,
+            count($attributes) ? ' ' : '',
             $this->implodeAttributes($attributes),
-            $text,
+            $this->escape($text),
         ];
 
         if ($title) {
-            $textSvg = '<text x="%f" y="%f" %s>%s<title>%s</title></text>';
+            $textSvg = '<text x="%f" y="%f"%s%s>%s<title>%s</title></text>';
             $arguments[] = $title;
         } else {
-            $textSvg = '<text x="%f" y="%f" %s>%s</text>';
+            $textSvg = '<text x="%f" y="%f"%s%s>%s</text>';
         }
 
         $this->svgElements[] = vsprintf($textSvg, $arguments);
@@ -208,7 +219,7 @@ class Svg
         $attr = [];
 
         foreach ($attributes as $key => $value) {
-            if ($value) {
+            if ($value !== null) {
                 $attr[] = sprintf('%s="%s"', $key, $this->escape($value));
             }
         }
@@ -218,6 +229,6 @@ class Svg
 
     private function escape(string $value): string
     {
-        return htmlspecialchars($value, ENT_XML1, 'UTF-8');
+        return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
     }
 }
