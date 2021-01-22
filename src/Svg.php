@@ -3,19 +3,15 @@ namespace Nerdman\Svg;
 
 class Svg
 {
-    /** @var Svg|null */
-    private $parent;
-
+    private ?Svg $parent;
     /** @var string[] */
-    private $svgAttributes = [];
-
+    private array $svgAttributes = [];
     /** @var string[] */
-    private $svgElements = [];
-
+    private array $svgElements = [];
     /** @var Svg[] */
-    private $identifiableGroups = [];
+    private array $identifiableGroups = [];
 
-    public function __construct(Svg $parent = null)
+    public function __construct(?self $parent = null)
     {
         $this->parent = $parent;
         if ($this->parent === null) {
@@ -23,15 +19,12 @@ class Svg
         }
     }
 
-    /**
-     * @return Svg|null
-     */
-    public function getParent()
+    public function getParent(): ?self
     {
         return $this->parent;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         $svg = $this->svgElements;
 
@@ -52,7 +45,7 @@ class Svg
         return implode("\n", $svg);
     }
 
-    public function addAttribute($key, $value): self
+    public function addAttribute(string $key, string $value): self
     {
         $this->svgAttributes[] = sprintf('%s="%s"', $key, $this->escape($value ?? ''));
         return $this;
@@ -72,11 +65,11 @@ class Svg
         );
     }
 
-    public function addDimensions(float $width, float $height): self
+    public function addDimensions(float $width, float $height, int $precision = 10): self
     {
         return $this
-            ->addAttribute('width', ceil($width))
-            ->addAttribute('height', ceil($height));
+            ->addAttribute('width', number_format(ceil($width), $precision))
+            ->addAttribute('height', number_format(ceil($height), $precision));
     }
 
     public function addNamespace(string $namespace): self
@@ -84,6 +77,9 @@ class Svg
         return $this->addAttribute('xmlns', $namespace);
     }
 
+    /**
+     * @param array<string, string> $attributes
+     */
     public function addGroup(array $attributes): self
     {
         $group = new Svg($this);
@@ -101,15 +97,14 @@ class Svg
         return $this;
     }
 
-    /**
-     * @param string $id
-     * @return Svg|null
-     */
-    public function getGroup(string $id)
+    public function getGroup(string $id): ?self
     {
         return $this->identifiableGroups[$id] ?? null;
     }
 
+    /**
+     * @param array<string, string> $attributes
+     */
     public function addLine(
         float $startX,
         float $startY,
@@ -121,7 +116,7 @@ class Svg
         if ($useDefaults) {
             $attributes += [
                 'stroke' => '#000',
-                'stroke-width' => 1,
+                'stroke-width' => '1',
             ];
         }
 
@@ -138,6 +133,9 @@ class Svg
         return $this;
     }
 
+    /**
+     * @param array<string, string> $attributes
+     */
     public function addCircle(
         float $x,
         float $y,
@@ -148,7 +146,7 @@ class Svg
         if ($useDefaults) {
             $attributes += [
                 'stroke-color' => '#000000',
-                'stroke-width' => 1,
+                'stroke-width' => '1',
                 'fill' => '#000000',
             ];
         }
@@ -176,6 +174,9 @@ class Svg
         return $this;
     }
 
+    /**
+     * @param array<string, string> $attributes
+     */
     public function addText(
         string $text,
         float $x,
@@ -214,6 +215,9 @@ class Svg
         return $this;
     }
 
+    /**
+     * @param array<string, string> $attributes
+     */
     private function implodeAttributes(array $attributes): string
     {
         $attr = [];
