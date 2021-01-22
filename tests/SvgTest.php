@@ -1,7 +1,7 @@
 <?php
 namespace Nerdman\Svg;
 
-use PHPStan\Testing\TestCase;
+use PHPUnit\Framework\TestCase;
 
 class SvgTest extends TestCase
 {
@@ -9,11 +9,11 @@ class SvgTest extends TestCase
      * @param Svg $svg
      * @param string $expected
      *
-     * @dataProvider \Nerdman\Svg\SvgTest::provider()
+     * @dataProvider provider
      */
     public function testSvg(Svg $svg, string $expected)
     {
-        $this->assertEquals($expected, $svg->__toString());
+        self::assertXmlStringEqualsXmlString($expected, (string)$svg);
     }
 
     public function provider(): array
@@ -23,48 +23,42 @@ class SvgTest extends TestCase
                 new Svg(),
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
-                <svg xmlns="http://www.w3.org/2000/svg">
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg"/>
                 SVG
             ],
             'viewbox' => [
                 (new Svg())->addViewBox(0, 0, 100, 100),
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"/>
                 SVG
             ],
             'dimensions' => [
                 (new Svg())->addDimensions(100, 200),
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
-                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="200">
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="200"/>
                 SVG
             ],
             'namespace' => [
-                (new Svg())->addNamespace('test'),
+                (new Svg())->addNamespace('t', 'http://nerdman.nl/test'),
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns="test">
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:t="http://nerdman.nl/test"/>
                 SVG
             ],
             'attribute' => [
                 (new Svg())->addAttribute('test', '123'),
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
-                <svg xmlns="http://www.w3.org/2000/svg" test="123">
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" test="123"/>
                 SVG
             ],
             'attribute_with_special_character' => [
                 (new Svg())->addAttribute('test', '"\'<>&'),
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
-                <svg xmlns="http://www.w3.org/2000/svg" test="&quot;&apos;&lt;&gt;&amp;">
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" test="&quot;&apos;&lt;&gt;&amp;"/>
                 SVG
             ],
             'group' => [
@@ -72,8 +66,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <g>
-                </g>
+                    <g/>
                 </svg>
                 SVG
             ],
@@ -82,8 +75,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <g id="test" another="testtest">
-                </g>
+                    <g id="test" another="testtest"/>
                 </svg>
                 SVG
             ],
@@ -92,18 +84,16 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <g id="test">
-                <g>
-                </g>
-                </g>
+                    <g id="test">
+                        <g/>
+                    </g>
                 </svg>
                 SVG
             ],
             'identifiable_group' => [
                 (new Svg())->addGroup(['id' => 'test'])->getGroup('test'),
                 <<<'SVG'
-                <g id="test">
-                </g>
+                <g id="test"/>
                 SVG
             ],
             'line' => [
@@ -111,7 +101,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <line x1="5.000000" y1="10.000000" x2="15.000000" y2="20.000000" stroke="#000" stroke-width="1"/>
+                    <line x1="5" y1="10" x2="15" y2="20" stroke="#000" stroke-width="1"/>
                 </svg>
                 SVG
             ],
@@ -120,7 +110,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <line x1="5.000000" y1="10.000000" x2="15.000000" y2="20.000000" stroke="#fff" stroke-width="1"/>
+                    <line x1="5" y1="10" x2="15" y2="20" stroke="#fff" stroke-width="1"/>
                 </svg>
                 SVG
             ],
@@ -129,7 +119,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <line x1="5.000000" y1="10.000000" x2="15.000000" y2="20.000000" test="" stroke="#000" stroke-width="1"/>
+                    <line x1="5" y1="10" x2="15" y2="20" test="" stroke="#000" stroke-width="1"/>
                 </svg>
                 SVG
             ],
@@ -138,7 +128,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <line x1="5.000000" y1="10.000000" x2="15.000000" y2="20.000000" stroke-width="1"/>
+                    <line x1="5" y1="10" x2="15" y2="20" stroke-width="1"/>
                 </svg>
                 SVG
             ],
@@ -147,7 +137,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <line x1="5.000000" y1="10.000000" x2="15.000000" y2="20.000000"/>
+                    <line x1="5" y1="10" x2="15" y2="20"/>
                 </svg>
                 SVG
             ],
@@ -156,7 +146,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <line x1="5.000000" y1="10.000000" x2="15.000000" y2="20.000000" test="123" stroke="#000" stroke-width="1"/>
+                    <line x1="5" y1="10" x2="15" y2="20" test="123" stroke="#000" stroke-width="1"/>
                 </svg>
                 SVG
             ],
@@ -169,9 +159,9 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <g id="test">
-                <line x1="5.000000" y1="10.000000" x2="15.000000" y2="20.000000"/>
-                </g>
+                    <g id="test">
+                        <line x1="5" y1="10" x2="15" y2="20"/>
+                    </g>
                 </svg>
                 SVG
             ],
@@ -180,7 +170,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <circle cx="10.000000" cy="20.000000" r="30.000000" stroke-color="#000000" stroke-width="1" fill="#000000"/>
+                    <circle cx="10" cy="20" r="30" stroke="#000" stroke-width="1" fill="#000"/>
                 </svg>
                 SVG
             ],
@@ -189,7 +179,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <circle cx="10.000000" cy="20.000000" r="30.000000"/>
+                    <circle cx="10" cy="20" r="30"/>
                 </svg>
                 SVG
             ],
@@ -198,7 +188,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <circle cx="10.000000" cy="20.000000" r="30.000000" test="123" stroke-color="#000000" stroke-width="1" fill="#000000"/>
+                    <circle cx="10" cy="20" r="30" test="123" stroke="#000" stroke-width="1" fill="#000"/>
                 </svg>
                 SVG
             ],
@@ -207,7 +197,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <circle cx="10.000000" cy="20.000000" r="30.000000" stroke-color="#000000" stroke-width="1" fill="#000000"><title>test</title></circle>
+                    <circle cx="10" cy="20" r="30" stroke="#000" stroke-width="1" fill="#000"><title>test</title></circle>
                 </svg>
                 SVG
             ],
@@ -220,9 +210,9 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <g id="test">
-                <circle cx="10.000000" cy="20.000000" r="30.000000" stroke-color="#000000" stroke-width="1" fill="#000000"/>
-                </g>
+                    <g id="test">
+                        <circle cx="10" cy="20" r="30" stroke="#000" stroke-width="1" fill="#000"/>
+                    </g>
                 </svg>
                 SVG
             ],
@@ -231,7 +221,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <text x="10.000000" y="20.000000" font-family="sans-serif" font-size="12px" fill="#000000">test</text>
+                    <text x="10" y="20" font-family="sans-serif" font-size="12px" fill="#000">test</text>
                 </svg>
                 SVG
             ],
@@ -240,7 +230,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <text x="10.000000" y="20.000000" font-family="sans-serif" font-size="12px" fill="#000000">&quot;&apos;&lt;&gt;&amp;</text>
+                    <text x="10" y="20" font-family="sans-serif" font-size="12px" fill="#000">&quot;&apos;&lt;&gt;&amp;</text>
                 </svg>
                 SVG
             ],
@@ -249,7 +239,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <text x="10.000000" y="20.000000">test</text>
+                    <text x="10" y="20">test</text>
                 </svg>
                 SVG
             ],
@@ -258,7 +248,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <text x="10.000000" y="20.000000" test="123" font-family="sans-serif" font-size="12px" fill="#000000">test</text>
+                    <text x="10" y="20" test="123" font-family="sans-serif" font-size="12px" fill="#000">test</text>
                 </svg>
                 SVG
             ],
@@ -267,7 +257,7 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <text x="10.000000" y="20.000000" font-family="sans-serif" font-size="12px" fill="#000000">test<title>123</title></text>
+                    <text x="10" y="20" font-family="sans-serif" font-size="12px" fill="#000">test<title>123</title></text>
                 </svg>
                 SVG
             ],
@@ -280,9 +270,9 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <g id="test">
-                <text x="10.000000" y="20.000000" font-family="sans-serif" font-size="12px" fill="#000000">test</text>
-                </g>
+                    <g id="test">
+                        <text x="10" y="20" font-family="sans-serif" font-size="12px" fill="#000">test</text>
+                    </g>
                 </svg>
                 SVG
             ],
@@ -302,14 +292,14 @@ class SvgTest extends TestCase
                 <<<'SVG'
                 <?xml version="1.0" encoding="utf-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg">
-                <g id="test1">
-                <circle cx="10.000000" cy="20.000000" r="30.000000" stroke-color="#000000" stroke-width="1" fill="#000000"/>
-                <text x="10.000000" y="20.000000" font-family="sans-serif" font-size="12px" fill="#000000">test</text>
-                </g>
-                <g id="test2" test="123">
-                <line x1="10.000000" y1="20.000000" x2="30.000000" y2="40.000000" stroke="#000" stroke-width="1"/>
-                <text x="10.000000" y="20.000000" font-family="sans-serif" font-size="12px" fill="#000000">foo</text>
-                </g>
+                    <g id="test1">
+                        <circle cx="10" cy="20" r="30" stroke="#000" stroke-width="1" fill="#000"/>
+                        <text x="10" y="20" font-family="sans-serif" font-size="12px" fill="#000">test</text>
+                    </g>
+                    <g id="test2" test="123">
+                        <line x1="10" y1="20" x2="30" y2="40" stroke="#000" stroke-width="1"/>
+                        <text x="10" y="20" font-family="sans-serif" font-size="12px" fill="#000">foo</text>
+                    </g>
                 </svg>
                 SVG
             ],

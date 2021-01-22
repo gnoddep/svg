@@ -4,7 +4,7 @@ namespace Nerdman\Svg;
 class Svg
 {
     private ?Svg $parent;
-    /** @var string[] */
+    /** @var array<string, string> */
     private array $svgAttributes = [];
     /** @var string[] */
     private array $svgElements = [];
@@ -26,28 +26,20 @@ class Svg
 
     public function __toString(): string
     {
-        $svg = $this->svgElements;
-
-        $attributes = implode(' ', $this->svgAttributes);
+        $elements = \implode('', $this->svgElements);
 
         if ($this->parent) {
-            array_unshift($svg, sprintf('<g%s%s>', count($this->svgAttributes) ? ' ' : '', $attributes));
-            $svg[] = '</g>';
+            return $this->createTag('g', $this->svgAttributes, $elements);
         } else {
-            array_unshift(
-                $svg,
-                '<?xml version="1.0" encoding="utf-8"?>',
-                sprintf('<svg %s>', $attributes)
-            );
-            $svg[] = '</svg>';
+            return '<?xml version="1.0" encoding="utf-8"?>'
+                . "\n"
+                . $this->createTag('svg', $this->svgAttributes, $elements);
         }
-
-        return implode("\n", $svg);
     }
 
     public function addAttribute(string $key, string $value): self
     {
-        $this->svgAttributes[] = sprintf('%s="%s"', $key, $this->escape($value ?? ''));
+        $this->svgAttributes[$key] = $value;
         return $this;
     }
 
@@ -65,16 +57,16 @@ class Svg
         );
     }
 
-    public function addDimensions(float $width, float $height, int $precision = 10): self
+    public function addDimensions(float $width, float $height, int $precision = 0): self
     {
         return $this
             ->addAttribute('width', number_format(ceil($width), $precision))
             ->addAttribute('height', number_format(ceil($height), $precision));
     }
 
-    public function addNamespace(string $namespace): self
+    public function addNamespace(string $prefix, string $namespace): self
     {
-        return $this->addAttribute('xmlns', $namespace);
+        return $this->addAttribute('xmlns:' . $prefix, $namespace);
     }
 
     /**
@@ -120,15 +112,12 @@ class Svg
             ];
         }
 
-        $this->svgElements[] = sprintf(
-            '<line x1="%f" y1="%f" x2="%f" y2="%f"%s%s/>',
-            $startX,
-            $startY,
-            $endX,
-            $endY,
-            count($attributes) ? ' ' : '',
-            $this->implodeAttributes($attributes)
-        );
+        $attributes['x1'] = number_format($startX);
+        $attributes['y1'] = number_format($startY);
+        $attributes['x2'] = number_format($endX);
+        $attributes['y2'] = number_format($endY);
+
+        $this->svgElements[] = $this->createTag('line', $attributes);
 
         return $this;
     }
@@ -145,31 +134,22 @@ class Svg
     ): self {
         if ($useDefaults) {
             $attributes += [
-                'stroke-color' => '#000000',
+                'stroke' => '#000',
                 'stroke-width' => '1',
-                'fill' => '#000000',
+                'fill' => '#000',
             ];
         }
 
-        $title = $attributes['title'] ?? null;
-        unset($attributes['title']);
-
-        $arguments = [
-            $x,
-            $y,
-            $radius,
-            count($attributes) ? ' ' : '',
-            $this->implodeAttributes($attributes),
-        ];
-
-        if ($title) {
-            $circleSvg = '<circle cx="%f" cy="%f" r="%f"%s%s><title>%s</title></circle>';
-            $arguments[] = $title;
-        } else {
-            $circleSvg = '<circle cx="%f" cy="%f" r="%f"%s%s/>';
+        if (isset($attributes['title'])) {
+            $title = $this->createTag('title', [], $attributes['title']);
+            unset($attributes['title']);
         }
 
-        $this->svgElements[] = vsprintf($circleSvg, $arguments);
+        $attributes['cx'] = number_format($x);
+        $attributes['cy'] = number_format($y);
+        $attributes['r'] = number_format($radius);
+
+        $this->svgElements[] = $this->createTag('circle', $attributes, $title ?? null);
 
         return $this;
     }
@@ -188,29 +168,21 @@ class Svg
             $attributes += [
                 'font-family' => 'sans-serif',
                 'font-size' => '12px',
-                'fill' => '#000000',
+                'fill' => '#000',
             ];
         }
 
-        $title = $attributes['title'] ?? null;
-        unset($attributes['title']);
+        $text = $this->escape($text);
 
-        $arguments = [
-            $x,
-            $y,
-            count($attributes) ? ' ' : '',
-            $this->implodeAttributes($attributes),
-            $this->escape($text),
-        ];
-
-        if ($title) {
-            $textSvg = '<text x="%f" y="%f"%s%s>%s<title>%s</title></text>';
-            $arguments[] = $title;
-        } else {
-            $textSvg = '<text x="%f" y="%f"%s%s>%s</text>';
+        if (isset($attributes['title'])) {
+            $text .= $this->createTag('title', [], $attributes['title']);
+            unset($attributes['title']);
         }
 
-        $this->svgElements[] = vsprintf($textSvg, $arguments);
+        $attributes['x'] = number_format($x);
+        $attributes['y'] = number_format($y);
+
+        $this->svgElements[] = $this->createTag('text', $attributes, $text);
 
         return $this;
     }
@@ -218,17 +190,25 @@ class Svg
     /**
      * @param array<string, string> $attributes
      */
-    private function implodeAttributes(array $attributes): string
+    private function createTag(string $element, array $attributes = [], ?string $content = null): string
     {
-        $attr = [];
+        $tag = '<' . $element;
 
-        foreach ($attributes as $key => $value) {
-            if ($value !== null) {
-                $attr[] = sprintf('%s="%s"', $key, $this->escape($value));
+        if ($attributes) {
+            foreach ($attributes as $key => $value) {
+                if ($value !== null) {
+                    $tag .= sprintf(' %s="%s"', $key, $this->escape($value));
+                }
             }
         }
 
-        return implode(' ', $attr);
+        if ($content === null) {
+            $tag .= '/>';
+        } else {
+            $tag .= '>' . $content . '</' . $element . '>';
+        }
+
+        return $tag;
     }
 
     private function escape(string $value): string
