@@ -1,6 +1,8 @@
 <?php
 namespace Nerdman\Svg;
 
+use Nerdman\Svg\Path\LineTo;
+use Nerdman\Svg\Path\MoveTo;
 use PHPUnit\Framework\TestCase;
 
 class SvgTest extends TestCase
@@ -273,6 +275,20 @@ class SvgTest extends TestCase
                     <g id="test">
                         <text x="10" y="20" font-family="sans-serif" font-size="12px" fill="#000">test</text>
                     </g>
+                </svg>
+                SVG
+            ],
+            // TODO: add more path testcases
+            'path' => [
+                (new Svg())
+                    ->addPath([
+                        new MoveTo([['x' => 10, 'y' => 10]], true),
+                        new LineTo([['x' => 20, 'y' => 20], ['x' => 30, 'y' => 30]], true),
+                    ]),
+                <<<'SVG'
+                <?xml version="1.0" encoding="utf-8"?>
+                <svg xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10,10 L20,20 30,30" fill="none" stroke="#000" stroke-width="1"/>
                 </svg>
                 SVG
             ],

@@ -190,6 +190,26 @@ class Svg
     /**
      * @param array<string, string> $attributes
      */
+    public function addPath(array $pathElements, array $attributes = [], bool $useDefaults = true): self
+    {
+        if ($useDefaults) {
+            $attributes += [
+                'stroke' => '#000',
+                'stroke-width' => '1',
+                'fill' => 'none',
+            ];
+        }
+
+        $attributes['d'] = implode(' ', $pathElements);
+
+        $this->svgElements[] = $this->createTag('path', $attributes);
+
+        return $this;
+    }
+
+    /**
+     * @param array<string, string> $attributes
+     */
     private function createTag(string $element, array $attributes = [], ?string $content = null): string
     {
         $tag = '<' . $element;
